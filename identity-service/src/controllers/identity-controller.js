@@ -1,5 +1,5 @@
 const logger = require("../utils/logger");
-const { validateRegistration } = require("../utils/validation");
+const { validateRegistration, validateLogin } = require("../utils/validation");
 const User = require("../models/user-model");
 const generateTokens = require("../utils/generate-tokens");
 
@@ -62,6 +62,65 @@ exports.registerUser = async (req, res) => {
 
 // user login
 
-// refrest tokem
+/**
+ * @desc User login
+ * @body {email, password}
+ * @returns {message, success, accessToken, refreshToken}
+ */
+
+exports.loginUser = async (req, res) => {
+  logger.info("Login endpoint hit");
+  try {
+    const { error } = validateLogin(req.body);
+
+    if (error) {
+      logger.warn("Validation error", error.details[0].message);
+      return res
+        .status(400)
+        .json({ message: error.details[0].message, success: false });
+    }
+
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      logger.warn("Invalid User");
+
+      return res.status(400).json({
+        success: false,
+        message: "Invalid User",
+      });
+    }
+
+    const isValidPassword = await user.comparePassword(password);
+
+    if (!isValidPassword) {
+      logger.warn("Invalid Password");
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Password",
+      });
+    }
+
+    const { accessToken, refreshToken } = await generateTokens(user);
+
+    return res.status(200).json({
+      message: "Login successful",
+      success: true,
+      accessToken,
+      refreshToken,
+      userId: user._id,
+    });
+  } catch (e) {
+    logger.error("Login error", e);
+    return res.status(500).json({
+      message: "Internal Server Error",
+      success: false,
+    });
+  }
+};
+
+// refresh token
 
 // logout

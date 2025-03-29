@@ -43,11 +43,11 @@ app.use((req, res, next) => {
     .then(() => next())
     .catch(() => {
       logger.warn(`Rate limit exceeded for IP: ${req.ip}`);
+      res.status(429).json({
+        success: false,
+        message: "Too many requests, please try again later.",
+      });
     });
-  res.status(429).json({
-    success: false,
-    message: "Too many requests, please try again later.",
-  });
 });
 
 /// IP based rate limiting for sensitive endpoints

@@ -7,6 +7,8 @@ const Redis = require("ioredis");
 const connectDB = require("./config/database");
 const helmet = require("helmet");
 const mediaRoutes = require("./routes/media-route");
+const { connectRabbitMQ, consumeEvent } = require("./utils/rabbitmq");
+const { handlePostDeleted } = require("./eventHandlers/media-event-handlers");
 
 const app = express();
 const PORT = process.env.PORT || 3003;
@@ -33,11 +35,22 @@ app.use("/api/media", mediaRoutes);
 
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-  logger.info(`Server is running on port ${PORT}`);
-  logger.info(`Redis URL: ${process.env.REDIS_URL}`);
-  logger.info(`MongoDB URL: ${process.env.MONGODB_URI}`);
-});
+async function startServer() {
+  try {
+    await connectRabbitMQ();
+    await consumeEvent("post.deleted", handlePostDeleted);
+    app.listen(PORT, () => {
+      logger.info(`Server is running on port ${PORT}`);
+      logger.info(`Redis URL: ${process.env.REDIS_URL}`);
+      logger.info(`MongoDB URL: ${process.env.MONGODB_URI}`);
+    });
+  } catch (e) {
+    logger.error("Failed to connect to server");
+    process.exit(1);
+  }
+}
+
+startServer();
 
 process.on("unhandledRejection", (reason, promise) => {
   logger.error("Unhandled Rejection at:", promise, "Reason:", reason);

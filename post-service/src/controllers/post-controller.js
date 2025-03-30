@@ -1,6 +1,7 @@
 const logger = require("../utils/logger");
 const Post = require("../models/post-model");
 const { validateCreatePost } = require("../utils/validation");
+const { publishEvent } = require("../utils/rabbitmq");
 
 async function invalidatePostCache(req, input) {
   const keys = await req.redisClient.keys("posts:*");
@@ -162,6 +163,13 @@ exports.deletePost = async (req, res) => {
         message: "Post not found",
       });
     }
+
+    // publish post delete method
+    await publishEvent("post.deleted", {
+      postId: post._id.toString(),
+      userId: req.user.userId,
+      mediaIds: post.mediaIds,
+    });
 
     await invalidatePostCache(req, postId);
 

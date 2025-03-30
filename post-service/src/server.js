@@ -7,7 +7,7 @@ const cors = require("cors");
 const postRoutes = require("./routes/post-route");
 const errorHandler = require("./middlewares/error-handler");
 const Redis = require("ioredis");
-const connectRabbitMQ = require("./utils/rabbitmq");
+const { connectRabbitMQ } = require("./utils/rabbitmq");
 
 const app = express();
 const PORT = process.env.PORT || 3002;

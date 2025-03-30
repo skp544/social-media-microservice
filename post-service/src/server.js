@@ -7,6 +7,7 @@ const cors = require("cors");
 const postRoutes = require("./routes/post-route");
 const errorHandler = require("./middlewares/error-handler");
 const Redis = require("ioredis");
+const connectRabbitMQ = require("./utils/rabbitmq");
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -42,12 +43,21 @@ app.use(
 
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-  logger.info(`Server is running on port ${PORT}`);
-  logger.info(`Redis URL: ${process.env.REDIS_URL}`);
-  logger.info(`MongoDB URL: ${process.env.MONGODB_URI}`);
-});
+async function startServer() {
+  try {
+    await connectRabbitMQ();
+    app.listen(PORT, () => {
+      logger.info(`Server is running on port ${PORT}`);
+      logger.info(`Redis URL: ${process.env.REDIS_URL}`);
+      logger.info(`MongoDB URL: ${process.env.MONGODB_URI}`);
+    });
+  } catch (e) {
+    logger.error("Failed to connect to server");
+    process.exit(1);
+  }
+}
 
+startServer();
 // unhandled promise
 
 process.on("unhandledRejection", (reason, promise) => {

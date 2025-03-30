@@ -56,3 +56,22 @@ exports.uploadMedia = async (req, res) => {
     });
   }
 };
+
+exports.getAllMedia = async (req, res) => {
+  logger.info("Get all media endpoint hit");
+  try {
+    const results = await Media.find({});
+
+    return res.status(200).json({
+      success: true,
+      message: "All media fetched",
+      results: results,
+    });
+  } catch (e) {
+    logger.error("Error in getting all media", e);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};

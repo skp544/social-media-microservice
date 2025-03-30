@@ -4,6 +4,7 @@ const Media = require("../models/media-model");
 
 exports.uploadMedia = async (req, res) => {
   logger.info("upload media endpoint hit");
+
   try {
     if (!req.file) {
       logger.error("No file found, Please add a file and try again");
@@ -14,7 +15,7 @@ exports.uploadMedia = async (req, res) => {
       });
     }
 
-    const { originalName, mimeType, buffer } = req.file;
+    const { originalname: originalName, mimetype: mimeType, buffer } = req.file;
     const userId = req.user.userId;
 
     logger.info(
@@ -34,7 +35,7 @@ exports.uploadMedia = async (req, res) => {
       originalName,
       mimeType,
       url: cloudinaryUploadResult.secure_url,
-      user: userId,
+      userId,
     });
 
     await newlyCreatedMedia.save();

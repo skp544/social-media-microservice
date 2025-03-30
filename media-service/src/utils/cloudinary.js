@@ -9,7 +9,7 @@ cloudinary.config({
 
 const uploadMediaToCloudinary = (file) => {
   return new Promise((resolve, reject) => {
-    const uploadStream = cloudinary.uploader.upload(
+    const uploadStream = cloudinary.uploader.upload_stream(
       {
         resource_type: "auto",
       },

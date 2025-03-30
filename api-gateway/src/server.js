@@ -99,6 +99,29 @@ app.use(
   }),
 );
 
+/// setting up proxy for media service
+app.use(
+  "/v1/media",
+  validateToken,
+  proxy(process.env.MEDIA_SERVER_URL, {
+    ...proxyOptions,
+    proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
+      proxyReqOpts.headers["x-user-id"] = srcReq.user.userId;
+      if (!srcReq.headers["content-type"].startsWith("multipart/form-data")) {
+        proxyReqOpts.headers["Content-Type"] = "application/json";
+      }
+      return proxyReqOpts;
+    },
+    userResDecorator: (proxyRes, proxyResData, userReq, userRes) => {
+      logger.info(
+        `Response received from Post  service: ${proxyRes.statusCode}`,
+      );
+      return proxyResData;
+    },
+    parseReqBody: false,
+  }),
+);
+
 app.use(errorHandler);
 
 app.listen(PORT, () => {
@@ -106,5 +129,7 @@ app.listen(PORT, () => {
   logger.info(
     `Identity service is running on  ${process.env.IDENTITY_SERVER_URL}`,
   );
+  logger.info(`POST service is running on  ${process.env.POST_SERVER_URL}`);
+  logger.info(`MEDIA service is running on  ${process.env.MEDIA_SERVER_URL}`);
   logger.info(`Redis URL is running ${process.env.REDIS_URL}`);
 });

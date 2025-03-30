@@ -48,6 +48,7 @@ exports.createPost = async (req, res) => {
 };
 
 exports.getAllPosts = async (req, res) => {
+  logger.info("Get all posts endpoint hit");
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
@@ -99,6 +100,7 @@ exports.getAllPosts = async (req, res) => {
 };
 
 exports.getSinglePosts = async (req, res) => {
+  logger.info("Get Single Post endpoint hit");
   try {
     const postId = req.params.id;
     const cacheKey = `posts:${postId}`;
@@ -144,7 +146,30 @@ exports.getSinglePosts = async (req, res) => {
 };
 
 exports.deletePost = async (req, res) => {
+  logger.info("Delete post endpoint hit");
   try {
+    const postId = req.params.id;
+
+    const post = await Post.findOneAndDelete({
+      _id: postId,
+      user: req.user.userId,
+    });
+
+    if (!post) {
+      logger.warn("Post not found");
+      return res.status(404).json({
+        success: false,
+        message: "Post not found",
+      });
+    }
+
+    await invalidatePostCache(req, postId);
+
+    logger.info("Post deleted successfully");
+    return res.status(200).json({
+      success: true,
+      message: "Post deleted successfully",
+    });
   } catch (e) {
     logger.error("Delete post error", e);
     return res.status(500).json({

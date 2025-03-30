@@ -32,6 +32,14 @@ exports.createPost = async (req, res) => {
     });
 
     await newCreatedPost.save();
+
+    await publishEvent("post.created", {
+      postId: newCreatedPost._id.toString(),
+      userId: req.user.userId,
+      content: newCreatedPost.content,
+      createdAt: newCreatedPost.createdAt,
+    });
+
     await invalidatePostCache(req, newCreatedPost._id.toString());
 
     logger.info("Post created successfully", newCreatedPost);
@@ -129,7 +137,7 @@ exports.getSinglePosts = async (req, res) => {
     await req.redisClient.setex(
       cachedPost,
       3600,
-      JSON.stringify(singlePostDetailsById),
+      JSON.stringify(singlePostDetailsById)
     );
 
     return res.status(200).json({

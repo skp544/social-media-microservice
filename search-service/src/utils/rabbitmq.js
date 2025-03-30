@@ -20,19 +20,6 @@ async function connectRabbitMQ() {
   }
 }
 
-async function publishEvent(routingKey, message) {
-  if (!channel) {
-    await connectRabbitMQ();
-  }
-
-  channel.publish(
-    EXCHANGE_NAME,
-    routingKey,
-    Buffer.from(JSON.stringify(message))
-  );
-  logger.info(`Event published to RabbitMQ with routing key: ${routingKey}`);
-}
-
 async function consumeEvent(routingKey, callback) {
   if (!channel) {
     await connectRabbitMQ();
@@ -52,4 +39,4 @@ async function consumeEvent(routingKey, callback) {
   logger.info(`Subscribed to event : ${routingKey}`);
 }
 
-module.exports = { connectRabbitMQ, publishEvent, consumeEvent };
+module.exports = { connectRabbitMQ, consumeEvent };

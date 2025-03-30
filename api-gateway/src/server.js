@@ -70,11 +70,11 @@ app.use(
     },
     userResDecorator: (proxyRes, proxyResData, userReq, userRes) => {
       logger.info(
-        `Response received from Identity service: ${proxyRes.statusCode}`,
+        `Response received from Identity service: ${proxyRes.statusCode}`
       );
       return proxyResData;
     },
-  }),
+  })
 );
 
 // setting up proxy for all post service
@@ -92,11 +92,11 @@ app.use(
     },
     userResDecorator: (proxyRes, proxyResData, userReq, userRes) => {
       logger.info(
-        `Response received from Post  service: ${proxyRes.statusCode}`,
+        `Response received from Post  service: ${proxyRes.statusCode}`
       );
       return proxyResData;
     },
-  }),
+  })
 );
 
 /// setting up proxy for media service
@@ -114,12 +114,32 @@ app.use(
     },
     userResDecorator: (proxyRes, proxyResData, userReq, userRes) => {
       logger.info(
-        `Response received from Post  service: ${proxyRes.statusCode}`,
+        `Response received from Media  service: ${proxyRes.statusCode}`
       );
       return proxyResData;
     },
     parseReqBody: false,
-  }),
+  })
+);
+
+// setting up proxy for search service
+app.use(
+  "/v1/search",
+  validateToken,
+  proxy(process.env.SEARCH_SERVER_URL, {
+    ...proxyOptions,
+    proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
+      proxyReqOpts.headers["Content-Type"] = "application/json";
+      proxyReqOpts.headers["x-user-id"] = srcReq.user.userId;
+      return proxyReqOpts;
+    },
+    userResDecorator: (proxyRes, proxyResData, userReq, userRes) => {
+      logger.info(
+        `Response received from Search  service: ${proxyRes.statusCode}`
+      );
+      return proxyResData;
+    },
+  })
 );
 
 app.use(errorHandler);
@@ -127,9 +147,10 @@ app.use(errorHandler);
 app.listen(PORT, () => {
   logger.info(`API Gateway is running on port ${PORT}`);
   logger.info(
-    `Identity service is running on  ${process.env.IDENTITY_SERVER_URL}`,
+    `Identity service is running on  ${process.env.IDENTITY_SERVER_URL}`
   );
   logger.info(`POST service is running on  ${process.env.POST_SERVER_URL}`);
   logger.info(`MEDIA service is running on  ${process.env.MEDIA_SERVER_URL}`);
+  logger.info(`SEARCH service is running on  ${process.env.SEARCH_SERVER_URL}`);
   logger.info(`Redis URL is running ${process.env.REDIS_URL}`);
 });
